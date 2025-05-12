@@ -2,7 +2,7 @@ import google.generativeai as genai
 import os
 
 def code_builder(prompt):
-    file_path = "C:\\Users\\bharg\\OneDrive\\Desktop\\gemini api key.txt"
+    file_path = "gemini_api_key_path"
     with open(file_path, 'r') as f:
         api_key = f.read().strip()
 
