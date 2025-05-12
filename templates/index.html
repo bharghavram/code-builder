@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>code builder</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 750px;
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .logo span {
+      display: inline-block;
+    }
+
+    .blue { color: #4285f4; }
+    .red { color: #ea4335; }
+    .yellow { color: #fbbc05; }
+    .green { color: #34a853; }
+
+    #chat-box {
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+
+    .message {
+      display: flex;
+      margin-bottom: 15px;
+      align-items: flex-start;
+    }
+
+    .message.user .bubble {
+      background: #e1f0ff;
+    }
+
+    .message.bot .bubble {
+      background: #e8f5e9;
+    }
+
+    .bubble {
+      padding: 12px 16px;
+      border-radius: 12px;
+      max-width: 100%;
+      white-space: pre-wrap;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      position: relative;
+    }
+
+    .avatar {
+      margin-right: 10px;
+      font-size: 24px;
+      margin-top: 4px;
+    }
+
+    .input-container {
+      display: flex;
+      border: 1px solid #ccc;
+      border-radius: 25px;
+      padding: 10px 15px;
+      background-color: #f1f1f1;
+    }
+
+    .input-field {
+      flex-grow: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 16px;
+    }
+
+    .send-button {
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-left: 10px;
+    }
+
+    .send-button:hover {
+      background-color: #357ae8;
+    }
+
+    pre code {
+      background-color: #272822;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 8px;
+      display: block;
+      overflow-x: auto;
+      font-size: 14px;
+    }
+
+    .copy-button {
+      background-color: #34a853;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-top: 5px;
+      float: right;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <span class="blue">Bharghav</span><span class="red">Ram's</span><span class="yellow">&nbsp;Code</span><span class="green">&nbsp;builder</span>
+    </div>
+
+    <div id="chat-box"></div>
+
+    <div class="input-container">
+      <input type="text" id="inputText" class="input-field" placeholder="Ask something...">
+      <button class="send-button" onclick="getResponse()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    function getResponse() {
+      const inputText = document.getElementById("inputText").value;
+      const chatBox = document.getElementById("chat-box");
+
+      if (!inputText.trim()) return;
+
+      // User message
+      const userMsg = document.createElement("div");
+      userMsg.className = "message user";
+      userMsg.innerHTML = `<div class="avatar">🧑‍💻</div><div class="bubble">${inputText}</div>`;
+      chatBox.appendChild(userMsg);
+
+      // Send to server
+      fetch('/get-response', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: inputText })
+      })
+      .then(response => response.json())
+      .then(data => {
+        const botMsg = document.createElement("div");
+        botMsg.className = "message bot";
+
+        const escaped = escapeHtml(data.response);
+        const formatted = `<pre><code>${escaped}</code></pre>
+          <button class="copy-button" onclick="copyCode(this)">Copy</button>`;
+
+        botMsg.innerHTML = `<div class="avatar">🤖</div><div class="bubble">${formatted}</div>`;
+        chatBox.appendChild(botMsg);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      })
+      .catch(error => {
+        const errorMsg = document.createElement("div");
+        errorMsg.className = "message bot";
+        errorMsg.innerHTML = `<div class="avatar">❗</div><div class="bubble">Error: ${error}</div>`;
+        chatBox.appendChild(errorMsg);
+      });
+
+      document.getElementById("inputText").value = "";
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function copyCode(button) {
+      const code = button.previousElementSibling.innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        button.innerText = "Copied!";
+        setTimeout(() => button.innerText = "Copy", 1500);
+      });
+    }
+  </script>
+</body>
+</html>
